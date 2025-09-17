@@ -8,6 +8,16 @@ from datetime import datetime
 
 DESKTOP_PATHWAY = "/Users/johnbryce/Desktop"
 
+# TODO:
+# 2. auto-folder or entire screenshot deletion after X amount of time
+# 3. prompt for user input to allow user to control the following (global variables with reset functionality i.e. reset.py w/ cmd: 'python reset.py')
+#       - folder name: daily_dir -- > allow flexibility for date format
+#               - either default setup (01 -04:25 PM) or (screenshot-01, screenshot-02, etc)
+#       - auto folder deletion: enable or disable, if enabled set deletion for every X days in number between 1 - 365
+#       - where screenshots folder exists: /Users/ (default) or on Desktop
+# 4. error handling
+# 5. task runner
+
 
 class ScreenshotHandler(FileSystemEventHandler):
     def on_created(self, event):
@@ -66,19 +76,14 @@ def move_screenshot(screenshot):
             final_filename = screenshot_file_path.name[1:]  #
             screenshot_file_path = screenshot_file_path.parent / final_filename
 
-        # final validation - ensure the file exists before attempting to move
-        if not screenshot_file_path.exists():
-            print(f"Screenshot file not found: {screenshot.src_path}")
-            return
-
         # construct the destination path and move the file
         filename = screenshot_file_path.name
-        new_file_path = daily_dir / filename
-        print(f"Moving: {screenshot_file_path} -> {new_file_path}")
+        # change the name of the screenshot to be more user friendly
+        updated_filename = rename_screenshot(filename, daily_dir)
+        new_file_path = daily_dir / updated_filename
 
         # move the file to the organized folder
         screenshot_file_path.rename(new_file_path)
-        print(f"Successfully moved screenshot to {new_file_path}")
 
     except FileNotFoundError:
         print("Screenshot was not moved to daily directory - file not found")
@@ -94,10 +99,9 @@ def create_folder_structure():
     try:
         screenshots_dir.mkdir()
     except FileExistsError:
-        print("screenshots directory already exists")
         pass  # directory already exists
     except PermissionError:
-        print("Permission error...")
+        print("Permission error during creation of screenshots folder...")
     # 2. creates the daily folder for the screenshot inside /Users/username/screenshots
     if screenshots_dir.exists():
         # create the daily directory formatted as "DD MM YEAR i.e. 17 September 2025"
@@ -111,16 +115,52 @@ def create_daily_directory(screenshots_dir):
     try:
         daily_dir.mkdir()
     except FileExistsError:
-        print(f"{daily_dir} directory already exists")
         pass  # directory already exists
     except PermissionError:
-        print("Permission error...")
+        print("Permission error in creation of daily directory...")
     return daily_dir
 
 
-# TODO: Rename with clean timestamp format (2025-09-15_14-32-05.png).
-def rename_screenshot():
-    pass
+def get_screenshot_count(daily_dir):
+    """Count existing screenshots and return next number."""
+    if not daily_dir.exists():
+        return 1
+
+    # Only count image files to be more precise
+    image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".bmp"}
+    existing_screenshots = sum(
+        1
+        for f in daily_dir.iterdir()
+        if f.is_file() and f.suffix.lower() in image_extensions
+    )
+
+    return existing_screenshots + 1
+
+
+def rename_screenshot(filename, daily_dir):
+    """
+    Rename screenshot with human-readable format and counter.
+
+    Args:
+        filename: Original screenshot filename
+        daily_dir: Path to the daily directory
+
+    Returns:
+        str: New filename in format "01 - 12:47 PM.png"
+    """
+    now = datetime.now()
+    original_path = Path(filename)
+    file_extension = original_path.suffix or ".png"
+
+    # get the current count of screenshots in the daily directory
+    screenshot_count = get_screenshot_count(daily_dir)
+
+    # format: "01 - 04.25 PM.png"
+    # time_str = now.strftime("%I.%M %p")
+    time_str = now.strftime("%I∶%M %p")
+    updated_filename = f"{screenshot_count:02d} - {time_str}{file_extension}"
+
+    return updated_filename
 
 
 def main():
