@@ -1,23 +1,20 @@
-import watchdog
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from pathlib import Path
-import os
 import time
-import threading
-import shutil
-import asyncio
 from datetime import datetime
 
 DESKTOP_PATHWAY = "/Users/johnbryce/Desktop"
 
+# TODO URGENT: create tests for cleanup_screenshots.py
+
 # TODO:
-# 2. auto-folder or entire screenshot deletion after X amount of time
+
 # 3. prompt for user input to allow user to control the following (global variables with reset functionality i.e. reset.py w/ cmd: 'python reset.py')
 #       - folder name: daily_dir -- > allow flexibility for date format
 #               - either default setup (01 -04:25 PM) or (screenshot-01, screenshot-02, etc)
 #       - auto folder deletion: enable or disable, if enabled set deletion for every X days in number between 1 - 365
-#       - where screenshots folder exists: /Users/ (default) or on Desktop
+#       - where screenshots folder exists: /Users/ (default) or on Desktops
 # 4. error handling
 # 5. task runner
 # 6. gracefully stop runner and cleanup the loop instead of force quit via ctrl+c or program shut down (i.e turning off computer)
@@ -165,44 +162,3 @@ def rename_screenshot(filename, daily_dir):
     updated_filename = f"{screenshot_count:02d} - {time_str}{file_extension}"
 
     return updated_filename
-
-
-async def cleanup_screenshots_task():
-    screenshots_dir = Path.home() / "screenshots"
-
-    delete_after_seconds = 30 * 24 * 60 * 60  # delete after 30 days
-    scan_interval_seconds = 60 * 60  # scan every hour
-
-    while True:
-        await asyncio.sleep(scan_interval_seconds)
-
-        if not screenshots_dir.exists():
-            print(f"Screenshots folder {screenshots_dir} does not exist yet")
-            continue
-
-        for dir in screenshots_dir.iterdir():
-            # skip hidden files/folders and ensure it's a directory
-            if dir.name.startswith(".") or not dir.is_dir():
-                continue
-
-            try:
-                dir_age_seconds = time.time() - dir.stat().st_ctime
-                print(f"{dir} is {dir_age_seconds:.2f} seconds old")
-
-                if dir_age_seconds >= delete_after_seconds:
-                    shutil.rmtree(dir)
-                    print(f"Deleted folder: {dir}")
-            except Exception as e:
-                print(f"Failed to delete folder {dir}: {e}")
-
-
-async def main():
-    # blocking screenshot task runs in its own thread
-    watcher_task = asyncio.to_thread(detect_screenshots)
-    # async cleanup loop
-    cleanup_task = asyncio.create_task(cleanup_screenshots_task())
-    await asyncio.gather(watcher_task, cleanup_task)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
