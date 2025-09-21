@@ -3,10 +3,11 @@ from watchdog.events import FileSystemEventHandler
 from pathlib import Path
 import time
 from datetime import datetime
+from config.config_loader import CONFIG
 
-DESKTOP_PATHWAY = "/Users/johnbryce/Desktop"
+home_dir = Path.home()
+DESKTOP_PATHWAY = f"{home_dir}/Desktop"
 
-# TODO URGENT: create tests for cleanup_screenshots.py
 
 # TODO:
 
@@ -93,20 +94,23 @@ def move_screenshot(screenshot):
 
 
 def create_folder_structure():
+    user_prefers_desktop = CONFIG["use_desktop_pathway"]
+
     # ensure folder destination exists & create the directories to hold the screenshots
-    # 1. initializes the screenshots folder in /Users/username
-    home_dir = Path.home()
-    screenshots_dir = home_dir / "screenshots"
+    if user_prefers_desktop:
+        screenshot_base_dir = Path.home() / "Desktop" / "screenshots"
+    else:
+        screenshot_base_dir = Path.home() / "screenshots"
+
+    # ensure base directory exists
     try:
-        screenshots_dir.mkdir()
-    except FileExistsError:
-        pass  # directory already exists
+        screenshot_base_dir.mkdir(exist_ok=True)
     except PermissionError:
         print("Permission error during creation of screenshots folder...")
-    # 2. creates the daily folder for the screenshot inside /Users/username/screenshots
-    if screenshots_dir.exists():
-        # create the daily directory formatted as "DD MM YEAR i.e. 17 September 2025"
-        daily_dir = create_daily_directory(screenshots_dir)
+
+    # create the daily folder inside base directory
+    if screenshot_base_dir.exists():
+        daily_dir = create_daily_directory(screenshot_base_dir)
         return daily_dir
 
 

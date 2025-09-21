@@ -1,0 +1,6 @@
+{
+  "screenshots_directory": "~/screenshots",
+  "auto_delete_directories": true,
+  "delete_after_days": 30,
+  "use_desktop_pathway": false
+}
