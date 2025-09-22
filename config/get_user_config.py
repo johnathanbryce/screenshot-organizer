@@ -5,9 +5,19 @@ def get_user_config():
     print("\n=== Screenshot Organizer Configuration ===")
     print("Leave blank to use current/default values")
 
-    # delete after days input
+    # enable/disable auto deletion input:
+    auto_delete_screenshots_config = CONFIG["auto_delete_directories"]
+    auto_deletion_input = input(f"Enable auto-deletion of screenshots? (y/n) [y]: ")
+    if auto_deletion_input.lower() in ("", "y", "yes"):
+        auto_delete_screenshots_config = True
+    else:
+
+        auto_delete_screenshots_config = False
+    CONFIG["auto_delete_directories"] = auto_delete_screenshots_config
+
+    # delete after days input:
     current_delete_config = CONFIG.get("delete_after_days", 30)
-    while True:
+    while auto_delete_screenshots_config:
         try:
             delete_after_days_input = input(
                 f"Delete screenshots after days (input number between 0 - 365): "
