@@ -8,7 +8,7 @@ def load_config():
         "screenshots_directory": str(
             Path.home() / "screenshots"
         ),  # /Users/user_name/screenshots
-        "use_desktop_pathway": False,  # if user prefers saving on desktop, create folder here
+        "use_desktop_pathway": False,  # if user prefers saving on desktop, auto-create the screenshots folder on their desktop
         "delete_after_days": 30,
     }
 
