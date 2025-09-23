@@ -6,20 +6,23 @@ from config.config_loader import CONFIG
 
 
 async def cleanup_screenshots_task():
-    delete_after_days = CONFIG["delete_after_days"]
-    user_prefers_desktop = CONFIG["use_desktop_pathway"]
     # check if auto-deletion is enabled before proceeding
     if not CONFIG.get("auto_delete_directories", False):
         return  # Exit early if auto-deletion is disabled
+
+    delete_after_days = CONFIG["delete_after_days"]
 
     # only proceed if delete_after_days exists and auto-deletion is enabled
     if delete_after_days is None:
         return
 
+    user_prefers_desktop = CONFIG["use_desktop_pathway"]
     if user_prefers_desktop:
-        screenshot_base_dir = Path.home() / "Desktop" / "screenshots"
+        screenshot_base_dir = (
+            Path.home() / "Desktop" / CONFIG["screenshots_main_directory_name"]
+        )
     else:
-        screenshot_base_dir = Path.home() / "screenshots"
+        screenshot_base_dir = Path.home() / CONFIG["screenshots_main_directory_name"]
 
     delete_after_seconds = (
         delete_after_days * 24 * 60 * 60

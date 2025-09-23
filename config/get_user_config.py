@@ -8,7 +8,7 @@ home = Path.home()
 
 
 def clear_screen():
-    if platform.system() == "windows":
+    if platform.system() == "Windows":
         os.system("cls")
     else:
         os.system("clear")
