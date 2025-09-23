@@ -2,6 +2,8 @@
 
 Automatically organize your macOS screenshots into date-based folders with customizable naming and cleanup options.
 
+A lightweight macOS automation tool that automatically organizes screenshots into date-based folders with customizable naming conventions. Features one-click setup, persistent background operation via LaunchAgent, configurable storage locations, and optional auto-cleanup. Designed for non-technical users with simple .command file installation while maintaining full source transparency.
+
 ## What It Does
 
 - **Auto-organizes screenshots** into folders by date (e.g., `Screenshots/23 September 2025/`)
