@@ -1,5 +1,5 @@
 {
-  "screenshots_main_directory_name": "~/screenshots",
+  "screenshots_main_directory_name": "Screenshots",
   "use_auto_screenshot_naming": true,
   "auto_delete_directories": true,
   "delete_after_days": 30,

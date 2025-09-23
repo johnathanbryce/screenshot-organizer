@@ -3,13 +3,11 @@ from cleanup_screenshots import cleanup_screenshots_task
 from screenshot_organizer import detect_screenshots
 
 # TODO:
-
-# 3. prompt for user input to allow user to control the following (global variables with reset functionality i.e. reset.py w/ cmd: 'python reset.py')
-#       - folder name: daily_dir -- > allow flexibility for date format
-#               - either default setup (01 -04:25 PM) or (screenshot-01, screenshot-02, etc)
-# 4. error handling
-# 5. task runner
-# 6. gracefully stop runner and cleanup the loop instead of force quit via ctrl+c or program shut down (i.e turning off computer)
+# - isolate get_user_config into functional steps instead of all in the fn
+# -  create a script command 'python reset_settings.py' for a user to run initiate get_user_config to allow a user to reset their settings?
+# - error handling
+# - task runner
+# - gracefully stop runner and cleanup the loop instead of force quit via ctrl+c or program shut down (i.e turning off computer)
 
 
 async def main():
