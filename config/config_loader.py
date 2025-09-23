@@ -5,7 +5,7 @@ from pathlib import Path
 def load_config():
 
     default_config = {
-        "screenshots_directory": str(
+        "screenshots_main_directory_name": str(
             Path.home() / "screenshots"
         ),  # /Users/user_name/screenshots
         "use_desktop_pathway": False,  # if user prefers saving on desktop, auto-create the screenshots folder on their desktop

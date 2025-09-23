@@ -68,9 +68,15 @@ def move_screenshot(screenshot):
 
         # construct the destination path and move the file
         filename = screenshot_file_path.name
-        # change the name of the screenshot to be more user friendly
-        updated_filename = rename_screenshot(filename, daily_dir)
-        new_file_path = daily_dir / updated_filename
+
+        # change the name of the screenshot to be more user friendly if enabled
+        use_auto_screenshot_renaming = CONFIG["use_auto_screenshot_naming"]
+        if use_auto_screenshot_renaming:
+            filename = rename_screenshot(
+                filename, daily_dir
+            )  # override default file name with custom screenshot file name (automatically numbered and timestamped)
+
+        new_file_path = daily_dir / filename
 
         # move the file to the organized folder
         screenshot_file_path.rename(new_file_path)
@@ -86,9 +92,11 @@ def create_folder_structure():
 
     # ensure folder destination exists & create the directories to hold the screenshots
     if user_prefers_desktop:
-        screenshot_base_dir = Path.home() / "Desktop" / "screenshots"
+        screenshot_base_dir = (
+            Path.home() / "Desktop" / CONFIG["screenshots_main_directory_name"]
+        )
     else:
-        screenshot_base_dir = Path.home() / "screenshots"
+        screenshot_base_dir = Path.home() / CONFIG["screenshots_main_directory_name"]
 
     # ensure base directory exists
     try:
@@ -141,6 +149,7 @@ def rename_screenshot(filename, daily_dir):
     Returns:
         str: New filename in format "01 - 12:47 PM.png"
     """
+
     now = datetime.now()
     original_path = Path(filename)
     file_extension = original_path.suffix or ".png"

@@ -7,8 +7,6 @@ from screenshot_organizer import detect_screenshots
 # 3. prompt for user input to allow user to control the following (global variables with reset functionality i.e. reset.py w/ cmd: 'python reset.py')
 #       - folder name: daily_dir -- > allow flexibility for date format
 #               - either default setup (01 -04:25 PM) or (screenshot-01, screenshot-02, etc)
-#       - auto folder deletion: enable or disable, if enabled set deletion for every X days in number between 1 - 365
-#       - where screenshots folder exists: /Users/ (default) or on Desktops
 # 4. error handling
 # 5. task runner
 # 6. gracefully stop runner and cleanup the loop instead of force quit via ctrl+c or program shut down (i.e turning off computer)
