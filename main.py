@@ -9,21 +9,11 @@
 import asyncio
 import sys
 from pathlib import Path
-from cleanup_screenshots import cleanup_screenshots_task
-from screenshot_organizer import detect_screenshots
-from config.config_loader import CONFIG
 
 
-def is_first_run():
-    """Check if this is the first time running the script"""
-    config_file = Path(__file__).parent / "config" / "config.json"
-    return not config_file.exists()
-
-
-def install_launchagent():
-    """Install the LaunchAgent to run the service in background"""
-    import os
-    import json
+def install_background_service():
+    """Install LaunchAgent to run this script in background"""
+    import subprocess
     from pathlib import Path
     
     # Get absolute paths
@@ -66,168 +56,108 @@ def install_launchagent():
     plist_file.write_text(plist_content)
     
     # Load the LaunchAgent
-    os.system(f'launchctl load "{plist_file}"')
-    
-    print(f"✅ Background service installed and started")
-    print(f"📝 Logs will be written to: {Path.home()}/Library/Logs/screenshot-organizer.log")
+    result = subprocess.run(['launchctl', 'load', str(plist_file)], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("Background service installed and started!")
+        print("Your screenshot organizer will now run automatically even when you close this window.")
+        print(f"Logs: {Path.home()}/Library/Logs/screenshot-organizer.log")
+    else:
+        print(f"Service installed but may not have started: {result.stderr}")
 
 
-def uninstall_launchagent():
-    """Remove the LaunchAgent"""
-    import os
+def uninstall_background_service():
+    """Remove the background service"""
+    import subprocess
     from pathlib import Path
     
     plist_file = Path.home() / "Library" / "LaunchAgents" / "com.screenshot-organizer.plist"
     
     if plist_file.exists():
         # Unload the service
-        os.system(f'launchctl unload "{plist_file}"')
-        # Remove the plist file
+        subprocess.run(['launchctl', 'unload', str(plist_file)], capture_output=True)
+        # Remove the plist file  
         plist_file.unlink()
-        print("✅ Screenshot Organizer service stopped and removed")
+        print("Background service stopped and removed")
     else:
-        print("❌ Service not found")
-
-
-def show_status():
-    """Show the current status of the service"""
-    import subprocess
-    from pathlib import Path
-    
-    plist_file = Path.home() / "Library" / "LaunchAgents" / "com.screenshot-organizer.plist"
-    
-    if not plist_file.exists():
-        print("❌ Screenshot Organizer is not installed")
-        return
-    
-    # Check if service is loaded
-    try:
-        result = subprocess.run(['launchctl', 'list', 'com.screenshot-organizer'], 
-                              capture_output=True, text=True)
-        if result.returncode == 0:
-            print("✅ Screenshot Organizer is running in the background")
-            
-            # Show current config
-            print(f"\n📋 Current Configuration:")
-            print(f"   • Main folder: {CONFIG['screenshots_main_directory_name']}")
-            print(f"   • Location: {'Desktop' if CONFIG['use_desktop_pathway'] else 'Home directory'}")
-            print(f"   • Auto naming: {'Enabled' if CONFIG['use_auto_screenshot_naming'] else 'Disabled'}")
-            print(f"   • Auto deletion: {'Enabled' if CONFIG.get('auto_delete_directories', False) else 'Disabled'}")
-            if CONFIG.get('auto_delete_directories', False):
-                print(f"   • Delete after: {CONFIG.get('delete_after_days', 'N/A')} days")
-            
-            # Show log location
-            log_file = Path.home() / "Library" / "Logs" / "screenshot-organizer.log"
-            if log_file.exists():
-                print(f"\n📝 Recent log entries:")
-                # Show last few lines of log
-                try:
-                    with open(log_file, 'r') as f:
-                        lines = f.readlines()
-                        for line in lines[-3:]:  # Show last 3 lines
-                            print(f"   {line.strip()}")
-                except:
-                    print("   (Unable to read log file)")
-        else:
-            print("⚠️  Screenshot Organizer is installed but not running")
-    except FileNotFoundError:
-        print("❌ Unable to check service status")
+        print("No background service found")
 
 
 async def main():
-    """Main entry point - handles different modes based on arguments"""
-    
     if len(sys.argv) > 1:
         mode = sys.argv[1]
         
-        if mode == "--setup":
-            # First time setup mode
-            from config.get_user_config import get_user_config
+        if mode == "--config":
+            # Just run configuration, don't start the service
+            if input("Configure settings? (y/n) [n]: ").strip().lower() in ("y", "yes"):
+                from config.get_user_config import get_user_config
+                get_user_config()
+            return  # Exit after config
             
-            if is_first_run():
-                print("👋 Welcome to Screenshot Organizer!")
-                print("Let's configure your screenshot organization settings...\n")
-            else:
-                print("🔧 Screenshot Organizer is already set up.")
-                reconfigure = input("Would you like to reconfigure your settings? (y/n) [n]: ").strip().lower()
-                if reconfigure not in ('y', 'yes'):
-                    show_status()
-                    return
-            
-            # Run configuration
-            get_user_config()
-            
-            # Install/reinstall the service
-            uninstall_launchagent()  # Remove existing if any
-            install_launchagent()    # Install fresh
-            
+        elif mode == "--install":
+            print("Installing background service...")
+            install_background_service()
             return
             
-        elif mode == "--config-only":
-            # Just reconfigure, don't reinstall service
-            from config.get_user_config import get_user_config
-            get_user_config()
-            print("✅ Configuration updated")
-            return
-            
-        elif mode == "--status":
-            show_status()
-            return
-            
-        elif mode == "--stop":
-            uninstall_launchagent()
+        elif mode == "--uninstall":
+            print("Removing background service...")
+            uninstall_background_service()
             return
             
         elif mode == "--service":
-            # This is the background service mode - run the actual organizer
-            print(f"Screenshot Organizer service starting... (PID: {os.getpid()})")
-            pass  # Continue to main service loop below
+            # Import watchdog modules only when needed for service
+            try:
+                from cleanup_screenshots import cleanup_screenshots_task
+                from screenshot_organizer import detect_screenshots
+                from config.config_loader import CONFIG
+            except ImportError as e:
+                print(f"Import error: {e}")
+                print("Make sure watchdog is installed: pip install watchdog")
+                return
+                
+            import os
+            print(f"Screenshot Organizer background service started (PID: {os.getpid()})")
+            print(f"Working directory: {os.getcwd()}")
+            print(f"Script location: {Path(__file__).parent.absolute()}")
+            
+            # Check if config file exists and show its contents
+            config_file = Path(__file__).parent / "config" / "config.json"
+            print(f"Looking for config at: {config_file}")
+            print(f"Config file exists: {config_file.exists()}")
+            
+            if config_file.exists():
+                import json
+                with open(config_file, 'r') as f:
+                    config_data = json.load(f)
+                print(f"Config contents: {config_data}")
+            
+            # Continue to main loop below
+            pass
         
         else:
             print(f"Unknown option: {mode}")
-            print("Available options: --setup, --config-only, --status, --stop")
+            print("Available options: --config, --install, --uninstall")
             return
     else:
-        # No arguments - show help
-        print("Screenshot Organizer")
-        print("===================")
-        print("")
-        print("To set up: Double-click ScreenshotOrganizer.command")
-        print("Or run: python3 main.py --setup")
-        print("")
-        print("Other commands:")
-        print("  --status     Show current status")
-        print("  --config     Reconfigure settings only")
-        print("  --stop       Stop the background service")
-        return
-    
-    # Service mode - run the main screenshot organizer
+        # Normal interactive mode
+        if input("Configure settings? (y/n) [n]: ").strip().lower() in ("y", "yes"):
+            from config.get_user_config import get_user_config
+            get_user_config()
+
+    # Run the main screenshot organizer (only if we get here)
     try:
-        # blocking screenshot task runs in its own thread
+        from cleanup_screenshots import cleanup_screenshots_task
+        from screenshot_organizer import detect_screenshots
+        
         watcher_task = asyncio.to_thread(detect_screenshots)
-        # async cleanup loop
         cleanup_task = asyncio.create_task(cleanup_screenshots_task())
         await asyncio.gather(watcher_task, cleanup_task)
     except KeyboardInterrupt:
-        print("Screenshot Organizer service stopped")
+        print("Screenshot Organizer stopped")
+    except ImportError as e:
+        print(f"Import error: {e}")
+        print("Make sure watchdog is installed: pip install watchdog")
 
 
 if __name__ == "__main__":
     import os
     asyncio.run(main())
-
-# async def main():
-#     if input("Configure settings? (y/n) [n]: ").strip().lower() in ("y", "yes"):
-#         from config.get_user_config import get_user_config
-
-#         get_user_config()
-
-#     # blocking screenshot task runs in its own thread
-#     watcher_task = asyncio.to_thread(detect_screenshots)
-#     # async cleanup loop
-#     cleanup_task = asyncio.create_task(cleanup_screenshots_task())
-#     await asyncio.gather(watcher_task, cleanup_task)
-
-
-# if __name__ == "__main__":
-#     asyncio.run(main())

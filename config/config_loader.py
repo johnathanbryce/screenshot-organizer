@@ -9,13 +9,16 @@ def load_config():
             Path.home() / "screenshots"
         ),  # /Users/user_name/screenshots
         "use_desktop_pathway": False,  # if user prefers saving on desktop, auto-create the screenshots folder on their desktop
+        "use_auto_screenshot_naming": True,
+        "auto_delete_directories": True,
         "delete_after_days": 30,
     }
 
     CONFIG_PATH = Path(__file__).parent / "config.json"
 
     if not CONFIG_PATH.exists():
-        json.dump(default_config, f, indent=4)
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(default_config, f, indent=4)
         print(
             f"Created default config file at {CONFIG_PATH}. Please edit it and restart the script."
         )
