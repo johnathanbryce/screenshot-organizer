@@ -3,21 +3,10 @@ from watchdog.events import FileSystemEventHandler
 from pathlib import Path
 import time
 from datetime import datetime
+from config.config_loader import CONFIG
 
-DESKTOP_PATHWAY = "/Users/johnbryce/Desktop"
-
-# TODO URGENT: create tests for cleanup_screenshots.py
-
-# TODO:
-
-# 3. prompt for user input to allow user to control the following (global variables with reset functionality i.e. reset.py w/ cmd: 'python reset.py')
-#       - folder name: daily_dir -- > allow flexibility for date format
-#               - either default setup (01 -04:25 PM) or (screenshot-01, screenshot-02, etc)
-#       - auto folder deletion: enable or disable, if enabled set deletion for every X days in number between 1 - 365
-#       - where screenshots folder exists: /Users/ (default) or on Desktops
-# 4. error handling
-# 5. task runner
-# 6. gracefully stop runner and cleanup the loop instead of force quit via ctrl+c or program shut down (i.e turning off computer)
+home_dir = Path.home()
+DESKTOP_PATHWAY = f"{home_dir}/Desktop"
 
 
 class ScreenshotHandler(FileSystemEventHandler):
@@ -79,9 +68,15 @@ def move_screenshot(screenshot):
 
         # construct the destination path and move the file
         filename = screenshot_file_path.name
-        # change the name of the screenshot to be more user friendly
-        updated_filename = rename_screenshot(filename, daily_dir)
-        new_file_path = daily_dir / updated_filename
+
+        # change the name of the screenshot to be more user friendly if enabled
+        use_auto_screenshot_renaming = CONFIG["use_auto_screenshot_naming"]
+        if use_auto_screenshot_renaming:
+            filename = rename_screenshot(
+                filename, daily_dir
+            )  # override default file name with custom screenshot file name (automatically numbered and timestamped)
+
+        new_file_path = daily_dir / filename
 
         # move the file to the organized folder
         screenshot_file_path.rename(new_file_path)
@@ -93,20 +88,25 @@ def move_screenshot(screenshot):
 
 
 def create_folder_structure():
+    user_prefers_desktop = CONFIG["use_desktop_pathway"]
+
     # ensure folder destination exists & create the directories to hold the screenshots
-    # 1. initializes the screenshots folder in /Users/username
-    home_dir = Path.home()
-    screenshots_dir = home_dir / "screenshots"
+    if user_prefers_desktop:
+        screenshot_base_dir = (
+            Path.home() / "Desktop" / CONFIG["screenshots_main_directory_name"]
+        )
+    else:
+        screenshot_base_dir = Path.home() / CONFIG["screenshots_main_directory_name"]
+
+    # ensure base directory exists
     try:
-        screenshots_dir.mkdir()
-    except FileExistsError:
-        pass  # directory already exists
+        screenshot_base_dir.mkdir(exist_ok=True)
     except PermissionError:
         print("Permission error during creation of screenshots folder...")
-    # 2. creates the daily folder for the screenshot inside /Users/username/screenshots
-    if screenshots_dir.exists():
-        # create the daily directory formatted as "DD MM YEAR i.e. 17 September 2025"
-        daily_dir = create_daily_directory(screenshots_dir)
+
+    # create the daily folder inside base directory
+    if screenshot_base_dir.exists():
+        daily_dir = create_daily_directory(screenshot_base_dir)
         return daily_dir
 
 
@@ -149,6 +149,7 @@ def rename_screenshot(filename, daily_dir):
     Returns:
         str: New filename in format "01 - 12:47 PM.png"
     """
+
     now = datetime.now()
     original_path = Path(filename)
     file_extension = original_path.suffix or ".png"
