@@ -144,6 +144,12 @@ def get_user_config():
         )
         if confirm_config_input in ("", "y", "yes"):
             show_section_header("Configuration Saved")
+            # SAVE THE CONFIG TO FILE
+            config_file = Path(__file__).parent / "config.json"
+            with open(config_file, 'w') as f:
+                json.dump(CONFIG, f, indent=2)
+
+            print("Configuration saved to file!")
             break  # exit config loop
         else:
             print("Restarting configuration...")
