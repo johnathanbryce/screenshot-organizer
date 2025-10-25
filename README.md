@@ -4,7 +4,9 @@ Automatically organize your macOS screenshots into date-based folders with custo
 
 A lightweight macOS automation tool that automatically organizes screenshots into date-based folders with customizable naming conventions. Features easy setup, persistent background operation via LaunchAgent, configurable storage locations, and optional auto-cleanup. Designed for non-technical users with simple installation while maintaining full source transparency.
 
-> **Quick Start:** Download this folder → Right-click `install.command` → Select "Open" → Follow prompts
+> **⚠️ IMPORTANT:** You CANNOT double-click to install. macOS will block it for security.
+>
+> **Quick Start:** Download → Right-click `install.command` → Select "Open" → Follow prompts
 
 ## What It Does
 
@@ -20,55 +22,58 @@ A lightweight macOS automation tool that automatically organizes screenshots int
 - **Python 3** (comes pre-installed on modern Macs)
 - **Internet connection** (for automatic dependency installation)
 
-## Quick Start
+## Installation
+
+### ⚠️ Why You Can't Double-Click
+
+macOS Gatekeeper blocks unknown `.command` files from running to protect your computer. **Double-clicking will NOT work.** You must right-click to open it the first time. This is normal macOS security behavior, not a bug.
 
 ### Step 1: Download
 Download this folder to your Mac (e.g., Downloads folder)
 
 ### Step 2: Install (Choose One Method)
 
-#### Method A: Right-Click to Install (Recommended - Works for Everyone)
+#### Option A: Right-Click to Install (Recommended)
 
-**IMPORTANT:** macOS security will block a normal double-click. Here's how to bypass it (one-time only):
+**DO NOT double-click** - it will be blocked by macOS security.
 
-1. **Right-click** (or hold Control and click) on `install.command`
+1. **Right-click** (or Control + click) on `install.command`
 2. Select **"Open"** from the menu
-3. Click **"Open"** in the security dialog that appears
-4. **Follow the prompts** in the Terminal window to configure your preferences
-5. **Done!** Take a screenshot (Cmd+Shift+3 or Cmd+Shift+4) to see it in action
+3. Click **"Open"** in the security dialog
+4. **Follow the prompts** in Terminal to configure your preferences
+5. **Done!** Take a screenshot (Cmd+Shift+3 or Cmd+Shift+4) to see it work
 
-> After this first time, you can double-click `StartScreenshotOrganizer.command` normally - no more right-clicking needed!
+> **Note:** After the installer runs once, it removes the security blocks from all files. You may be able to double-click the other `.command` files normally after that.
 
-#### Method B: Terminal One-Liner (For Advanced Users)
+#### Option B: Terminal Command (Alternative)
 
-Open Terminal and paste this command:
+Open Terminal and paste:
 ```bash
 cd ~/Downloads/screenshot-organizer && bash install.command
 ```
 
-> Replace `~/Downloads/screenshot-organizer` with the actual path if you saved it elsewhere.
+> Replace `~/Downloads/screenshot-organizer` with your actual folder path.
 
 ---
 
-**That's it!** The installer automatically:
-- ✅ Fixes macOS security permissions for all files
+**The installer automatically:**
+- ✅ Removes macOS security blocks from all files
 - ✅ Installs required dependencies (watchdog)
 - ✅ Guides you through configuration
-- ✅ Sets up the background service to run automatically
+- ✅ Sets up background service to run automatically
 
 ## Usage
 
-### First Time Setup
+### After Installation
 
-- Double-click `StartScreenshotOrganizer.command`
-- Configure your folder name, location, and cleanup preferences
-- The script will automatically install required dependencies
-- Choose to install as background service for continuous operation
+Once installed, the organizer runs automatically in the background. Just take screenshots normally (Cmd+Shift+3 or Cmd+Shift+4) and they'll be organized automatically.
 
 ### Managing the Service
 
-- **Stop:** Double-click `StopScreenshotOrganizer.command`
-- **Reconfigure:** Run the start command again
+- **Reconfigure settings:** Right-click (or double-click) `StartScreenshotOrganizer.command`
+- **Stop the service:** Right-click (or double-click) `StopScreenshotOrganizer.command`
+
+> If you get security warnings on these files, use right-click → Open (same as installation)
 
 ## Configuration Options
 
@@ -91,14 +96,14 @@ The script monitors your Desktop for new screenshots and automatically:
 
 ### "Cannot be opened because it is from an unidentified developer"
 
-This is macOS Gatekeeper protecting your system. **Solution:**
+**This is completely normal.** macOS Gatekeeper blocks all unknown `.command` files to protect your system. This script is safe (all code is visible and open source), but macOS doesn't know that without an Apple Developer signature ($99/year).
 
-**Right-click to bypass (One-time fix):**
+**Solution - Right-click to bypass:**
 1. **Right-click** (or Control+click) on `install.command`
 2. Select **"Open"** from the menu
-3. Click **"Open"** in the security dialog
+3. Click **"Open"** again in the security dialog
 
-This only needs to be done ONCE. After running the installer, all other files will work with normal double-clicks.
+This is a one-time step. The installer removes security attributes from all project files.
 
 **Alternative - Terminal command:**
 ```bash
@@ -107,12 +112,13 @@ cd ~/Downloads/screenshot-organizer && bash install.command
 
 ### Permission Errors
 
-If you see "could not be executed because you do not have appropriate access privileges":
+If you see "could not be executed because you do not have appropriate access privileges," try right-clicking and selecting "Open" instead of double-clicking.
 
+If that doesn't work, run in Terminal:
 ```bash
-chmod +x StartScreenshotOrganizer.command
-chmod +x StopScreenshotOrganizer.command
+chmod +x install.command StartScreenshotOrganizer.command StopScreenshotOrganizer.command
 ```
+Then right-click to open.
 
 ### Python Not Found
 
